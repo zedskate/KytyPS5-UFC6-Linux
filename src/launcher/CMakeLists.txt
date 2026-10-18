@@ -166,6 +166,7 @@ elseif(LINUX)
 				EXECUTABLES \"${CMAKE_CURRENT_BINARY_DIR}/${launcher_name}\"
 				LIBRARIES \${kyty_plugin_files}
 				RESOLVED_DEPENDENCIES_VAR kyty_resolved
+				UNRESOLVED_DEPENDENCIES_VAR kyty_unresolved
 				POST_INCLUDE_REGEXES \"libQt6\" \"libicu\"
 				POST_EXCLUDE_REGEXES \".*\")
 			foreach(kyty_dep \${kyty_resolved})

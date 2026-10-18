@@ -74,13 +74,12 @@ jobs:
             wayland-protocols \
             libdecor-0-dev \
             qt6-base-dev \
-            qt6-base-private-dev \
-            libqt6concurrent6 \
-            libqt6network6 \
-            libqt6widgets6 \
-            libqt6dbus6 \
-            libqt6gui6 \
-            libqt6core6
+            qt6-base-private-dev
+          
+          # Ensure glslangValidator symlink exists if only glslang was provided
+          if command -v glslang >/dev/null 2>&1 && ! command -v glslangValidator >/dev/null 2>&1; then
+            sudo ln -sf "$(which glslang)" /usr/local/bin/glslangValidator
+          fi
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.11
@@ -94,17 +93,22 @@ jobs:
           ninja --version
           clang++ --version
           ld.lld --version
-          glslangValidator --version
+          if command -v glslangValidator >/dev/null 2>&1; then
+            glslangValidator --version || true
+          elif command -v glslang >/dev/null 2>&1; then
+            glslang --version || true
+          fi
           echo "Host architecture: $(uname -m)"
 
       - name: Configure CMake
         shell: bash
         run: |
+          set -o pipefail
           mkdir -p _Build/linux
           cmake -S . -B _Build/linux \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
             -DKYTY_BUILD_ORIGIN="Source" \
             -DKYTY_BUILD_REPOSITORY="${{ github.repository }}" \
             -DKYTY_RELEASE_TAG="${{ needs.metadata.outputs.release_tag }}" \
