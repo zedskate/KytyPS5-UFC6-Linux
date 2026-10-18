@@ -128,7 +128,10 @@ jobs:
         run: |
           cmake --build _Build/linux \
             --target launcher kyty_emulator \
-            --parallel $(nproc)
+            --parallel $(nproc) || \
+          cmake --build _Build/linux \
+            --target launcher kyty_emulator \
+            --verbose
 
       - name: Run Unit Tests
         shell: bash
