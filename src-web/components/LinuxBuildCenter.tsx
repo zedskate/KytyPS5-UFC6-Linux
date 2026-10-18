@@ -365,8 +365,8 @@ cmake --install _Build/linux --prefix _Build/linux/install
               </div>
               <div className="text-xs text-slate-400 mt-0.5">
                 Configured in <code className="text-purple-300">.github/workflows/build.yml</code> on{' '}
-                <code className="text-slate-200">ubuntu-24.04</code> with Clang, Qt 6.10.3, and automated{' '}
-                <code className="text-slate-200">KytyPS5-Linux-x86_64.tar.gz</code> release packaging.
+                <code className="text-slate-200">ubuntu-24.04</code> with Clang, native Qt 6, and automated{' '}
+                <code className="text-slate-200">KytyPS5-Linux-x86_64.tar.gz</code> release packaging (Windows CI scrapped).
               </div>
             </div>
           </div>
