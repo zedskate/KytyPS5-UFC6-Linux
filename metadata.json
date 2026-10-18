@@ -1,0 +1,8 @@
+{
+  "name": "KytyPS5 Emulator Hub",
+  "description": "PlayStation 5 emulator launcher, compatibility database, live execution simulator, DualSense mapping, and shader diagnostic inspector for KytyPS5.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

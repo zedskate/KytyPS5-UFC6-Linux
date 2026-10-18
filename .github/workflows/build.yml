@@ -292,11 +292,8 @@ jobs:
           path: ${{ runner.temp }}/KytyPS5-macOS-x86_64.zip
           if-no-files-found: error
 
-  # Windows-only CI: Linux build disabled (was: Build KytyPS5 (Linux)).
-  # The job is kept as a stub so the diff stays reviewable; it never runs.
   linux:
-    name: Build KytyPS5 (Linux - disabled, Windows-only CI)
-    if: false
+    name: Build KytyPS5 (Linux)
     needs: metadata
     runs-on: ubuntu-24.04
 
@@ -391,7 +388,7 @@ jobs:
         shell: bash
         run: |
           cmake --build _Build/linux \
-            --target launcher page_manager_tests memory_tracker_tests \
+            --target launcher kyty_emulator page_manager_tests memory_tracker_tests \
               audio_out2_port_tests pad_haptics_tests controller_settings_tests ime_dialog_tests lru_cache_tests virtual_memory_allocation_tests \
               resource_tracking_tests scalar_provenance_tests \
               resource_materialization_tests shader_vertex_metadata_tests archive_file_tests avplayer_file_tests \
@@ -438,15 +435,11 @@ jobs:
 
   release:
     name: Release KytyPS5
-    # Windows-only CI: the release is gated on the Windows build alone. The
-    # macOS/Linux jobs are disabled stubs, so their results must not gate this.
     if: >-
       always() &&
       github.event_name == 'push' &&
-      (github.repository == 'KytyPS5/KytyPS5' ||
-       (github.repository == 'Senaxx/KytyPS5' && github.ref == 'refs/heads/wolverine')) &&
-      needs.windows.result == 'success'
-    needs: [metadata, windows]
+      (needs.windows.result == 'success' || needs.linux.result == 'success')
+    needs: [metadata, windows, linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -461,30 +454,46 @@ jobs:
           name: KytyPS5-Windows-x64
           path: artifacts/KytyPS5-Windows-x64
 
-      # Windows-only CI: no macOS/Linux artifacts are produced or downloaded.
+      - name: Download Linux build
+        if: needs.linux.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: KytyPS5-Linux-x86_64
+          path: artifacts/KytyPS5-Linux-x86_64
 
       - name: Package Windows build
         if: needs.windows.result == 'success'
         shell: bash
         run: |
           windows_dir="artifacts/KytyPS5-Windows-x64"
-          test -d "$windows_dir"
-          (
-            cd "$windows_dir"
-            zip -r "$GITHUB_WORKSPACE/$RELEASE_NAME-Windows-x64.zip" .
-          )
+          if [ -d "$windows_dir" ]; then
+            (
+              cd "$windows_dir"
+              zip -r "$GITHUB_WORKSPACE/$RELEASE_NAME-Windows-x64.zip" .
+            )
+          fi
 
-      # Windows-only CI: no macOS/Linux packages are produced.
+      - name: Package Linux build
+        if: needs.linux.result == 'success'
+        shell: bash
+        run: |
+          linux_dir="artifacts/KytyPS5-Linux-x86_64"
+          if [ -d "$linux_dir" ]; then
+            (
+              cd "$linux_dir"
+              tar -czvf "$GITHUB_WORKSPACE/$RELEASE_NAME-Linux-x86_64.tar.gz" .
+            )
+          fi
 
       - name: Create release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Windows-only CI: the Windows zip is the only release asset.
           assets=()
           for artifact in \
-            "$RELEASE_NAME-Windows-x64.zip"; do
+            "$RELEASE_NAME-Windows-x64.zip" \
+            "$RELEASE_NAME-Linux-x86_64.tar.gz"; do
             if [[ -f "$artifact" ]]; then
               assets+=("$artifact")
             fi
